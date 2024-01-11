@@ -1,0 +1,42 @@
+version:  "3.8"
+
+services:
+  wetty:
+    image: wettyoss/wetty
+    container_name: wetty
+    ports:
+      - ${PORT}:3000
+    environment:
+      - SSHHOST=ssh-server
+      - SSHPORT=2222
+      - SSHUSER=${USER}
+    networks:
+      - ssh-network
+    restart: unless-stopped
+    depends_on:
+      - ssh-server
+
+  ssh-server:
+    image: lscr.io/linuxserver/openssh-server:latest
+    container_name: ssh-server
+    hostname: ssh-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - USER_NAME=${USER}
+      - USER_PASSWORD=${USER_PASSWORD}
+      - SUDO_ACCESS=true
+      - PASSWORD_ACCESS=true
+    networks:
+      - ssh-network
+    volumes:
+      - config-sshserver:/config
+      - data-sshserver:/user/bin
+    restart: unless-stopped
+
+volumes:
+  data-sshserver:
+  config-sshserver:
+
+networks:
+  ssh-network:
