@@ -1,11 +1,29 @@
 version:  "3.8"
 
 services:
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    container_name: reverse-proxy
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - CADDY_INGRESS_NETWORKS=ssh-network
+    networks:
+      - ssh-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+    restart: unless-stopped
+
   wetty:
     image: wettyoss/wetty
     container_name: wetty
-    ports:
-      - ${PORT}:3000
+    labels:
+      caddy: ${DOMAIN} 
+      caddy.basicauth: /*
+      caddy.basicauth.ujstor: ${AUTH_PASSWORD} 
+      caddy.reverse_proxy: "{{upstreams 3000}}"
     environment:
       - SSHHOST=ssh-server
       - SSHPORT=2222
@@ -17,26 +35,28 @@ services:
       - ssh-server
 
   ssh-server:
-    image: lscr.io/linuxserver/openssh-server:latest
+    image: lscr.io/linuxserver/openssh-server
     container_name: ssh-server
     hostname: ssh-server
     environment:
       - PUID=1000
       - PGID=1000
+      - PASSWORD_ACCESS=true
       - USER_NAME=${USER}
       - USER_PASSWORD=${USER_PASSWORD}
       - SUDO_ACCESS=true
-      - PASSWORD_ACCESS=true
     networks:
       - ssh-network
     volumes:
-      - config-sshserver:/config
-      - data-sshserver:/user/bin
+      - ssh-config:/config
+      - ssh-data:/usr/bin
     restart: unless-stopped
 
 volumes:
-  data-sshserver:
-  config-sshserver:
+  caddy_data:
+  ssh-config:
+  ssh-data:
 
 networks:
   ssh-network:
+    external: true

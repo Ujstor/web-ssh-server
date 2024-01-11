@@ -1,4 +1,4 @@
-# Wetty and SSH-Server Docker Compose Configuration
+# Wetty and SSH-Server Docker Compose Configuration with Caddy Reverse Proxy
 
 This Docker Compose configuration sets up two services: Wetty and SSH-Server, allowing you to access an SSH server via a web-based terminal. Services are containerized using Docker, making it easy to deploy and manage.
 
@@ -17,7 +17,22 @@ This Docker Compose configuration sets up two services: Wetty and SSH-Server, al
     PORT=8080        # Choose the desired port for Wetty
     USER=myuser       # Set your desired username for SSH
     USER_PASSWORD=mypassword   # Set your desired password for SSH user
+    AUTH_PASSWORD=<Generated Base64-encoded Password>
     ```
+
+    - To generate the `AUTH_PASSWORD`, run the following Docker command to create the hashed password:
+
+      ```bash
+      docker run --rm caddy caddy hash-password --plaintext mypassword
+      ```
+
+    - Take the output from the command and encode it in Base64. You can use the following command:
+
+      ```bash
+      echo -n '<output>' | base64
+      ```
+
+      Replace `<output>` with the result obtained from the previous command.
 
 3. Run the following command to start the services:
 
@@ -25,14 +40,19 @@ This Docker Compose configuration sets up two services: Wetty and SSH-Server, al
     docker-compose up -d
     ```
 
-4. Access Wetty in your web browser by navigating to `http://localhost:8080/wetty` (replace 8080 with the chosen port).
+4. **Important:** Before accessing Wetty, make sure you have a domain configured and pointed to the server's IP address. Update your DNS settings accordingly.
 
-5. Use the provided SSH credentials to log in and start using the web-based terminal.
+5. Access Wetty securely in your web browser by navigating to `https://<your-domain>/wetty`.
+
+6. Use the provided SSH credentials to log in and start using the web-based terminal.
+
+Note: If you don't have a domain, you can use services like [DynDNS](https://dyn.com/dns/) or [No-IP](https://www.noip.com/) to get a free domain name that dynamically updates to your server's IP address. Ensure your router/firewall forwards the necessary ports (e.g., 80, 443) to your server for external access.
 
 ## Configuration
 
 - The Wetty service is configured to run on the specified port, with SSH details passed through environment variables.
 - The SSH-Server service uses LinuxServer's OpenSSH Server image and allows customization through environment variables.
+- Caddy is employed as a reverse proxy to ensure secure access to the services.
 
 ## Cleanup
 
@@ -66,5 +86,18 @@ docker-compose down
 | USER_NAME=linuxserver.io | Specify a username for SSH (Default: `linuxserver.io`).                                              |
 | LOG_STDOUT             | Set to true to log to stdout instead of a file.                                                       |
 
+
+
+## Caddy Reverse Proxy Configuration
+
+Additionally, this configuration includes Caddy as a reverse proxy to ensure secure access to the services. Below are the details for the Caddy configuration:
+
+- Caddy listens on ports 80 and 443, providing HTTP and HTTPS access to the services.
+- It is part of the `ssh-network` network for seamless communication with other services.
+- Docker socket is mounted to facilitate dynamic configuration based on running containers.
+- Data persistence is ensured through the `caddy_data` volume.
+- Caddy automatically manages SSL certificates using Let's Encrypt.
+
+ Refer to the Caddy documentation for more details: [Caddy Documentation](https://caddyserver.com/docs).
 
 
