@@ -41,6 +41,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+      - TZ=CET
       - PASSWORD_ACCESS=true
       - USER_NAME=${USER}
       - USER_PASSWORD=${USER_PASSWORD}
@@ -49,13 +50,11 @@ services:
       - ssh-network
     volumes:
       - ssh-config:/config
-      - ssh-data:/usr/bin
     restart: unless-stopped
 
 volumes:
   caddy_data:
   ssh-config:
-  ssh-data:
 
 networks:
   ssh-network:
