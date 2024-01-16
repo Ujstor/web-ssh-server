@@ -45,7 +45,7 @@ docker-compose down
 ## Notes
 
 - Make sure to secure your SSH credentials and consider using SSH key pairs for enhanced security.
-- Customize the environment variables in the `.env` file to suit your preferences.
+- Customize the environment variables to suit your preferences.
 
 ## SSH Server env Variables
 
@@ -67,4 +67,53 @@ docker-compose down
 | LOG_STDOUT             | Set to true to log to stdout instead of a file.                                                       |
 
 
+## Build SSH server from Dockerfile
 
+```bash
+docker build -t <image-name>
+```
+
+Environment variables:
+
+```bash
+docker run -d \
+  --name=openssh-server \
+  --hostname=openssh-server `#optional` \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e TZ=Etc/UTC \
+  -e PUBLIC_KEY=yourpublickey `#optional` \
+  -e PUBLIC_KEY_FILE=/path/to/file `#optional` \
+  -e PUBLIC_KEY_DIR=/path/to/directory/containing/_only_/pubkeys `#optional` \
+  -e PUBLIC_KEY_URL=https://github.com/username.keys `#optional` \
+  -e SUDO_ACCESS=false `#optional` \
+  -e PASSWORD_ACCESS=false `#optional` \
+  -e USER_PASSWORD=password `#optional` \
+  -e USER_PASSWORD_FILE=/path/to/file `#optional` \
+  -e USER_NAME=linuxserver.io `#optional` \
+  -e LOG_STDOUT= `#optional` \
+  -p 2222:2222 \
+  -v /path/to/appdata/config:/config \
+  --restart unless-stopped \
+  <image-name>
+
+```
+
+Example:
+
+```bash
+docker build -t test-ssh-server . && \
+docker run \
+  --name=openssh-server \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e TZ=CET \
+  -e SUDO_ACCESS=true \
+  -e PASSWORD_ACCESS=true \
+  -e USER_PASSWORD=root \
+  -e USER_NAME=ujstor \
+  -p 2222:2222 \
+  -v ./config:/config \
+  --restart unless-stopped \
+  test-ssh-server
+```

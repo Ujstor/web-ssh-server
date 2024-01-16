@@ -23,6 +23,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+      - TZ=CET
       - USER_NAME=${USER}
       - USER_PASSWORD=${USER_PASSWORD}
       - SUDO_ACCESS=true
@@ -31,11 +32,9 @@ services:
       - ssh-network
     volumes:
       - config-sshserver:/config
-      - data-sshserver:/user/bin
     restart: unless-stopped
 
 volumes:
-  data-sshserver:
   config-sshserver:
 
 networks:
